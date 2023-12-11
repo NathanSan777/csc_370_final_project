@@ -5,7 +5,7 @@ import nltk
 import random
 import matplotlib.pyplot as plt
 import file_reader as fr
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import train_test_split, cross_val_score
 from sklearn.linear_model import LogisticRegression
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics import accuracy_score
@@ -26,7 +26,7 @@ def main():
     file5 = './review_data/train_essays_7_prompts_v2.csv'
 
     df = fr.convert_csv_to_dataframe(file)
-    sample_df = fr.get_random_lines(df, 1000)
+    sample_df = fr.get_random_lines(df, 10000)
     # print(sample_df)
     vectorizer = TfidfVectorizer()
 
@@ -46,11 +46,24 @@ def main():
     X_test_tfidf = vectorizer.transform(X_test)
 
     lr_model = LogisticRegression(random_state=42)
+
     lr_model.fit(X_train_tfidf, y_train)
     y_pred = lr_model.predict(X_test_tfidf)
 
     score = accuracy_score(y_test, y_pred)
     print("Accuracy of logistic regression: ", score)
+
+    # Cross-validation code 
+    feature_names = vectorizer.get_feature_names_out()
+    coef_values = lr_model.coef_[0]
+
+    # Create a DataFrame to show feature importance
+    feature_importance_df = pd.DataFrame({'Feature': feature_names, 'Coefficient': coef_values})
+    feature_importance_df = feature_importance_df.sort_values(by='Coefficient', ascending=False)
+
+    # Print the top features
+    print("Top 10 Features:")
+    print(feature_importance_df.head(10))
 
     # Create and plot confusion matrix based on prediction
 
