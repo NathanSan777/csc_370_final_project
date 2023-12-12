@@ -12,8 +12,6 @@ import matplotlib.pyplot as plt
 def convert_csv_to_dataframe(filepath):
     df = pd.read_csv(filepath, sep=",")
     df = df.dropna()
-    # print(df)
-    # print("File has been read and converted to a dataframe!")
     return df
 
 
@@ -27,16 +25,6 @@ def get_random_lines(df, amount):
 
 def main():
 
-    print("Hello! Beginning to read file...")
-    # file = './review_data/Training_Essay_Data.csv'
-    # file2 = './review_data/train_essays_7_prompts.csv'
-    # file3 = './review_data/train_essays_RDizzl3_seven_v1.csv'
-    # file4 = './review_data/train_essays_RDizzl3_seven_v2.csv'
-    # file5 = './review_data/train_essays_7_prompts_v2.csv'
-
-    # df = convert_csv_to_dataframe(file)
-    # sample_df = get_random_lines(df, 100)
-    # print(sample_df)
-    
+    print("Hello! Beginning to read file...")  
 
 main()

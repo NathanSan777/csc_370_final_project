@@ -4,6 +4,7 @@ import sklearn as sk
 import nltk
 import random
 import matplotlib.pyplot as plt
+#Import FileReader to read in files and create dataframes
 import file_reader as fr
 
 from sklearn.model_selection import train_test_split, KFold
@@ -12,21 +13,18 @@ from sklearn.neighbors import KNeighborsClassifier
 from sklearn.metrics import accuracy_score
 from sklearn.decomposition import PCA
 from sklearn.feature_extraction.text import TfidfVectorizer
+import joblib
 
-
+def save_knn_model(model, filepath):
+    """Save a trained knn model for later use"""
+    joblib.dump(model, filepath)
 
 def main():
 
     print("Currently running knn-model.")
 
     file = './review_data/Training_Essay_Data.csv'
-    # These are other datasets we picked up to test if we are overfitting
-    # our data. They'll be commented out when we're done testing this.
-    file2 = './review_data/train_essays_7_prompts.csv'
-    file3 = './review_data/train_essays_RDizzl3_seven_v1.csv'
-    file4 = './review_data/train_essays_RDizzl3_seven_v2.csv'
-    file5 = './review_data/train_essays_7_prompts_v2.csv'
-
+    
     df = fr.convert_csv_to_dataframe(file)
     sample_df = fr.get_random_lines(df, 1000)
     np.random.seed(42)
@@ -52,7 +50,7 @@ def main():
         # Get each set of training and testing indexes within the kFold 
         for train_index, test_index in kFolds.split(X):
             # Split our data into training and testing sets
-            X_train, X_test = X[train_index], X[test_index]
+            X_train, X_test = X[train_index].toarray(), X[test_index].toarray()
             y_train, y_test = y.iloc[train_index], y.iloc[test_index]
             # Create a KNN classifier with k value
             model = KNeighborsClassifier(n_neighbors=k)
@@ -70,9 +68,7 @@ def main():
     plt.title('k-NN Cross Validation Scores')
     plt.xlabel('Number of Neighbors (k)')
     plt.ylabel('Cross Validation Accuracy')
-
     plt.show()
-
-
+    save_knn_model(model, 'knn_model.joblib')
 
 main()

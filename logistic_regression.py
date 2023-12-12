@@ -12,6 +12,7 @@ from sklearn.metrics import accuracy_score
 from sklearn.metrics import confusion_matrix
 
 
+
 # 0 means human, 1 means ai generated
 
 def main():
@@ -20,10 +21,10 @@ def main():
     file = './review_data/Training_Essay_Data.csv'
     # These are other datasets we picked up to test if we are overfitting
     # our data. They'll be commented out when we're done testing this.
-    file2 = './review_data/train_essays_7_prompts.csv'
-    file3 = './review_data/train_essays_RDizzl3_seven_v1.csv'
-    file4 = './review_data/train_essays_RDizzl3_seven_v2.csv'
-    file5 = './review_data/train_essays_7_prompts_v2.csv'
+    # file2 = './review_data/train_essays_7_prompts.csv'
+    # file3 = './review_data/train_essays_RDizzl3_seven_v1.csv'
+    # file4 = './review_data/train_essays_RDizzl3_seven_v2.csv'
+    # file5 = './review_data/train_essays_7_prompts_v2.csv'
 
     df = fr.convert_csv_to_dataframe(file)
     sample_df = fr.get_random_lines(df, 10000)
