@@ -100,6 +100,7 @@ def main():
     for sentence in human_text:
         words = nltk.word_tokenize(sentence)
         for word in words:
+            # Error in this line here.
             if word in word_map:
                 human_vector += matrix[word_map[word], :]
 
