@@ -14,11 +14,13 @@ import matplotlib.pyplot as plt
 #Import FileReader to read in files and create dataframes
 import file_reader as fr
 
+
 def load_embeddings(filename):
     """
     This function loads the embedding from a file and returns 2 things
     1) a word_map, this is a dictionary that maps words to an index.
     2) a matrix of row vectors for each work, index the work using the vector.
+
 
     :param filename:
     :return: word_map, matrix
@@ -37,10 +39,12 @@ def load_embeddings(filename):
             word_map[word] = count
             count += 1
 
+
             rest = list(map(float, rest))
             matrix.append(rest)
     matrix = np.array(matrix)
     return word_map, matrix
+
 
 def load_text_words(filename):
     """
@@ -60,15 +64,16 @@ def load_text_words(filename):
     # return a list of words from the text.
     return text_words
 
-def sentence_to_vector(query_sentence, word_map, matrix):
-    words = nltk.word_tokenize(query_sentence)
-    sentence_vector = np.zeros(50)
+
+def sentence_to_vector(sentence, word_map, matrix):
+    words = nltk.word_tokenize(sentence)
+    sentence_vector = np.zeros((matrix.shape[1], ))
     for word in words:
         # print(word)
         if word in word_map:
             sentence_vector += matrix[word_map[word],:]
     return sentence_vector
-    
+   
 def cossim(vA, vB):
     """
     Calcuate the cosine similarity value.
@@ -78,6 +83,7 @@ def cossim(vA, vB):
     :return: similarity
     """
     return np.dot(vA, vB) / (np.sqrt(np.dot(vA, vA)) * np.sqrt(np.dot(vB, vB)))
+
 
 def main():
     print("Hello! Welcome to our text analyzer. Please input some text.")
@@ -91,43 +97,56 @@ def main():
     human_text = df_text[df_labels == 0]
     ai_text = df_text[df_labels == 1]
 
-    human_vector_length = len(human_text)
-    ai_generated_vector_length = len(ai_text)
+    human_vector = np.zeros((matrix.shape[1], ))
+    ai_generated_vector = np.zeros((matrix.shape[1], ))
+    user_sentence_vector = np.zeros((matrix.shape[1], ))
 
-    human_vector = np.zeros(human_vector_length)
-    ai_generated_vector = np.zeros(ai_generated_vector_length)
-    user_sentence_vector = np.zeros(human_vector_length)
+
+    
     for sentence in human_text:
-        words = nltk.word_tokenize(sentence)
-        for word in words:
-            # Error in this line here.
-            if word in word_map:
-                human_vector += matrix[word_map[word], :]
+        sentence_vector = sentence_to_vector(sentence, word_map, matrix)
+        human_vector += sentence_vector
+    print("Done tokenizing human text.")
+
 
     # Convert AI-generated text to vector
     for sentence in ai_text:
-        words = nltk.word_tokenize(sentence)
-        for word in words:
-            if word in word_map:
-                ai_generated_vector += matrix[word_map[word], :]
+        sentence_vector = sentence_to_vector(sentence, word_map, matrix)
+        ai_generated_vector += sentence_vector
+
+    print("Done tokenizing ai text.")
 
     # Convert user input to vector
     user_sentence_vector = sentence_to_vector(userInput, word_map, matrix)
 
+    print("Shape of user_sentence vector: ", user_sentence_vector.shape)
+    print("Shape of human vector: ", human_vector.shape)
+    print("Shape of ai_generated_vector: ", ai_generated_vector.shape)
+    print("Human vector is: ", human_vector)
+    print("AI vector is ", ai_generated_vector)
+    print("User vector is: ", user_sentence_vector)
+
     # Calculate cosine similarity between user input and both human-written and AI-generated text
+    #Error here with ValueError
     similarity_to_human = cossim(user_sentence_vector, human_vector)
     similarity_to_ai_generated = cossim(user_sentence_vector, ai_generated_vector)
+    print("Simularity to human-written text: ", similarity_to_human)
+    print("Similarity to AI-generated text: ", similarity_to_ai_generated)
 
-    # Set a threshold for determining if the input is similar to AI-generated text
-    threshold = 0.8  # Adjust the threshold accordingly
 
-    if similarity_to_ai_generated > threshold:
+
+    if similarity_to_ai_generated > similarity_to_human:
         print("The input is similar to AI-generated text.")
     else:
         print("The input is likely human-written.")
-
-
     
+    # Create a bar chart
+    labels = ['Human-written simularity', 'AI-generated simularity']
+    similarities = [similarity_to_human, similarity_to_ai_generated]
 
+    plt.bar(labels, similarities, color=['blue', 'red'])
+    plt.ylabel('Cosine Similarity')
+    plt.title('Similarity between User Input and Text Types')
+    plt.show()
 
 main()
