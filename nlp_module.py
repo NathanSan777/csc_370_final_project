@@ -88,21 +88,26 @@ def cossim(vA, vB):
 def main():
     print("Hello! Welcome to our text analyzer. Please input some text.")
     userInput = input()
+    #Load embeds 
     embedding_filename = './glove.6B/glove.6B.50d.txt'
     word_map, matrix = load_embeddings(embedding_filename)
+
+    #Load in csv and get texts from it
     file = './review_data/Training_Essay_Data.csv'
     df = fr.convert_csv_to_dataframe(file)
     df_text = df['text']
     df_labels = df['generated']
+    # Seperate human and ai texts
     human_text = df_text[df_labels == 0]
     ai_text = df_text[df_labels == 1]
 
+    #Create empty vectors to store info in
     human_vector = np.zeros((matrix.shape[1], ))
     ai_generated_vector = np.zeros((matrix.shape[1], ))
     user_sentence_vector = np.zeros((matrix.shape[1], ))
 
 
-    
+    #Convert human text to vector
     for sentence in human_text:
         sentence_vector = sentence_to_vector(sentence, word_map, matrix)
         human_vector += sentence_vector
@@ -133,8 +138,7 @@ def main():
     print("Simularity to human-written text: ", similarity_to_human)
     print("Similarity to AI-generated text: ", similarity_to_ai_generated)
 
-
-
+    #Based on the similarities, determine if the input is human-written or AI-generated
     if similarity_to_ai_generated > similarity_to_human:
         print("The input is similar to AI-generated text.")
     else:
@@ -143,7 +147,7 @@ def main():
     # Create a bar chart
     labels = ['Human-written simularity', 'AI-generated simularity']
     similarities = [similarity_to_human, similarity_to_ai_generated]
-
+    #Plot the similarities
     plt.bar(labels, similarities, color=['blue', 'red'])
     plt.ylabel('Cosine Similarity')
     plt.title('Similarity between User Input and Text Types')
