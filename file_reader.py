@@ -1,8 +1,11 @@
+"""
+A program to read in files and convert them to dataframes.
+By: Nathan Sanchez, Trung Pham, Suleman Baloch
+
+"""
 import pandas as pd
 import numpy as np
 import sklearn as sk
-import nltk
-import random
 import matplotlib.pyplot as plt
 
 
@@ -24,7 +27,6 @@ def get_random_lines(df, amount):
 
 
 def main():
-
     print("Hello! Beginning to read file...")  
 
 main()

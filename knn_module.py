@@ -1,8 +1,16 @@
+"""
+A program to test the accuracy of TFIDF vectors using KNN.
+The program reads in a CSV file of reviews, and then makes 
+predictions on if a review is human-written or AI-generated after
+being trained. It then displays the accuracy for each fold.
+
+By: Nathan Sanchez, Trung Pham, Suleman Baloch
+
+"""
+
 import pandas as pd
 import numpy as np
 import sklearn as sk
-import nltk
-import random
 import matplotlib.pyplot as plt
 #Import FileReader to read in files and create dataframes
 import file_reader as fr
@@ -16,15 +24,17 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 import joblib
 
 def save_knn_model(model, filepath):
-    """Save a trained knn model for later use"""
+    # Save a trained knn model for later use in a joblib file
     joblib.dump(model, filepath)
 
 def main():
 
     print("Currently running knn-model.")
 
+    #Load in csv file
     file = './review_data/Training_Essay_Data.csv'
     
+    # Create dataframe from 
     df = fr.convert_csv_to_dataframe(file)
     sample_df = fr.get_random_lines(df, 1000)
     np.random.seed(42)
@@ -63,12 +73,13 @@ def main():
     
     overall_accuracy = np.mean(accuracy_scores)
     print("Overall mean accuracy: ", overall_accuracy)
-    
+    #Plot the accuracies from the model 
     plt.plot(k_values, accuracy_scores, marker='o')
     plt.title('k-NN Cross Validation Scores')
     plt.xlabel('Number of Neighbors (k)')
     plt.ylabel('Cross Validation Accuracy')
     plt.show()
+    #Save model for future use
     save_knn_model(model, 'knn_model.joblib')
 
 main()

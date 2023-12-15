@@ -1,3 +1,11 @@
+"""
+A program to predict labels using Logistic Regression.
+While this is a file in our project, we decided to not use it 
+as the accuracy rate was abnormally high.
+By: Nathan Sanchez, Trung Pham, Suleman Baloch
+
+"""
+
 import pandas as pd
 import numpy as np
 import sklearn as sk

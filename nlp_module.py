@@ -1,15 +1,22 @@
 """
-    A program to query senteces.
+A program to test the accuracy of GloVe vectors using KNN.
+The program reads in a CSV file of reviews,converts them into GloVe 
+vectors, and then makes predictions on if a review is human-written 
+or AI-generated after being trained. 
+It then displays the accuracy for each fold.
+
+By: Nathan Sanchez, Trung Pham, Suleman Baloch
+  
 """
 import nltk
 from nltk.tokenize import word_tokenize
 import numpy as np
-import math
 import pandas as pd
 import numpy as np
 import sklearn as sk
-from sklearn.linear_model import LogisticRegression
-import random
+from sklearn.model_selection import train_test_split, cross_val_score
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.metrics import accuracy_score
 import matplotlib.pyplot as plt
 #Import FileReader to read in files and create dataframes
 import file_reader as fr
@@ -66,28 +73,78 @@ def load_text_words(filename):
 
 
 def sentence_to_vector(sentence, word_map, matrix):
+    """
+    A method to convert a sentence into a GloVe vector.
+
+    """
+    #Tokenize sentence
     words = nltk.word_tokenize(sentence)
+    #Convert the tokens into the vector
     sentence_vector = np.zeros((matrix.shape[1], ))
+    # If the words inside of the sentence are in the word map,
+    # add the words from the word map into the sentence vector
     for word in words:
         # print(word)
         if word in word_map:
             sentence_vector += matrix[word_map[word],:]
     return sentence_vector
-   
-def cossim(vA, vB):
-    """
-    Calcuate the cosine similarity value.
-    Returns the similarity value, range: [-1, 1]
-    :param vA:
-    :param vB:
-    :return: similarity
-    """
-    return np.dot(vA, vB) / (np.sqrt(np.dot(vA, vA)) * np.sqrt(np.dot(vB, vB)))
 
+def convert_csv_to_glove(csv_file, wordmap, matrix):
+    """
+    A method to convert a CSV file into a GloVe vector.
+    It takes in a csv file, makes it a dataframe, and then
+    converts each sentence into a GloVe vector.
+
+    """
+    # Load in our dataframe
+    df = fr.convert_csv_to_dataframe(csv_file)
+    df = fr.get_random_lines(df, 1000)
+    # Get columns
+    df_text = df['text']
+    df_labels = df['generated']
+
+    text_vectors = []
+    for sentence in df_text: 
+        text_vector = sentence_to_vector(sentence, wordmap, matrix)
+        text_vectors.append(text_vector)
+    # Return a tuple of an array of text vectors, as well as
+    # the labels of the dataframe
+    return np.array(text_vectors), df_labels
+
+def train_knn_classifier(text_vectors, labels):
+    """
+    A method to train a knn model with GloVe vectors, where it 
+    takes a random fold and goes through k neighbors.
+
+    """
+    fold_accuracies = []
+
+    for k in range(1, 21, 2):
+        X_train, X_test, y_train, y_test = train_test_split(text_vectors, labels, test_size=0.2, random_state=42)
+        knn_classifier = KNeighborsClassifier(n_neighbors=k)
+    
+        knn_classifier.fit(X_train, y_train)
+        y_pred = knn_classifier.predict(X_test)
+        fold_accuracy = accuracy_score(y_test, y_pred)
+        fold_accuracies.append(fold_accuracy)
+
+    cross_val_accuracies = []
+    for k in range(1, 21, 2):
+        knn_classifier = KNeighborsClassifier(n_neighbors=k)
+        cross_val_accuracy = np.mean(cross_val_score(knn_classifier, text_vectors, labels))
+        cross_val_accuracies.append(cross_val_accuracy)
+
+    print("Average accuracy of model: ", np.mean(cross_val_accuracies))
+    plt.plot(range(1,21, 2), cross_val_accuracies, marker='o')
+    plt.xlabel('Fold')
+    plt.ylabel('Accuracy')
+    plt.title('Cross-Validation Scores')
+    plt.show()
+
+    return knn_classifier                          
 
 def main():
-    print("Hello! Welcome to our text analyzer. Please input some text.")
-    userInput = input()
+    
     #Load embeds 
     embedding_filename = './glove.6B/glove.6B.50d.txt'
     word_map, matrix = load_embeddings(embedding_filename)
@@ -95,62 +152,9 @@ def main():
     #Load in csv and get texts from it
     file = './review_data/Training_Essay_Data.csv'
     df = fr.convert_csv_to_dataframe(file)
-    df_text = df['text']
-    df_labels = df['generated']
-    # Seperate human and ai texts
-    human_text = df_text[df_labels == 0]
-    ai_text = df_text[df_labels == 1]
 
-    #Create empty vectors to store info in
-    human_vector = np.zeros((matrix.shape[1], ))
-    ai_generated_vector = np.zeros((matrix.shape[1], ))
-    user_sentence_vector = np.zeros((matrix.shape[1], ))
+    text_vectors, labels = convert_csv_to_glove(file, word_map, matrix)
 
-
-    #Convert human text to vector
-    for sentence in human_text:
-        sentence_vector = sentence_to_vector(sentence, word_map, matrix)
-        human_vector += sentence_vector
-    print("Done tokenizing human text.")
-
-
-    # Convert AI-generated text to vector
-    for sentence in ai_text:
-        sentence_vector = sentence_to_vector(sentence, word_map, matrix)
-        ai_generated_vector += sentence_vector
-
-    print("Done tokenizing ai text.")
-
-    # Convert user input to vector
-    user_sentence_vector = sentence_to_vector(userInput, word_map, matrix)
-
-    print("Shape of user_sentence vector: ", user_sentence_vector.shape)
-    print("Shape of human vector: ", human_vector.shape)
-    print("Shape of ai_generated_vector: ", ai_generated_vector.shape)
-    print("Human vector is: ", human_vector)
-    print("AI vector is ", ai_generated_vector)
-    print("User vector is: ", user_sentence_vector)
-
-    # Calculate cosine similarity between user input and both human-written and AI-generated text
-    #Error here with ValueError
-    similarity_to_human = cossim(user_sentence_vector, human_vector)
-    similarity_to_ai_generated = cossim(user_sentence_vector, ai_generated_vector)
-    print("Simularity to human-written text: ", similarity_to_human)
-    print("Similarity to AI-generated text: ", similarity_to_ai_generated)
-
-    #Based on the similarities, determine if the input is human-written or AI-generated
-    if similarity_to_ai_generated > similarity_to_human:
-        print("The input is similar to AI-generated text.")
-    else:
-        print("The input is likely human-written.")
-    
-    # Create a bar chart
-    labels = ['Human-written simularity', 'AI-generated simularity']
-    similarities = [similarity_to_human, similarity_to_ai_generated]
-    #Plot the similarities
-    plt.bar(labels, similarities, color=['blue', 'red'])
-    plt.ylabel('Cosine Similarity')
-    plt.title('Similarity between User Input and Text Types')
-    plt.show()
+    knn_glove_model = train_knn_classifier(text_vectors, labels)
 
 main()
